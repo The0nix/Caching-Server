@@ -1,40 +1,66 @@
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <stdarg.h>
 #include <stdio.h>
-
-bool debug_mode = false;
-
-void display_help()
-{
-        printf("help\n");
-}
-
-void slog(char *str) 
-{
-        if(debug_mode) {
-                printf("%s", str);
-        }
-}
+#include <stdlib.h>
+#include "utils.h"
 
 int main(int argc, char **argv) 
 {
-        char cmd_flags;
-        while ((cmd_flags = getopt(argc, argv, "dh?")) != -1) {
-               switch(cmd_flags) {
-                        case('d'):
-                                debug_mode = true;
-                                break;
-                        case('h'):
-                        case('?'):
-                                display_help();
-                                return 0;
-                        default:
-                                break;
-               }
-        }
+        check_args(argc, argv);
+        //read_conf();
         slog("Program started.\n");
-        while(1) {
-                sleep(1);
+        int create_socket, new_socket;
+        socklen_t addrlen;
+        int bufsize = 1024*1024;
+        char *buffer = malloc(bufsize);
+        struct sockaddr_in address;
+
+        create_socket = socket(AF_INET, SOCK_STREAM, 0); 
+        if(create_socket > 0) {
+                slog("Created socket\n");
         }
+        
+        address.sin_family = AF_INET;
+        address.sin_addr.s_addr = INADDR_ANY;
+        address.sin_port = htons(global_args.port);
+        slog("Address: %d:%d\n", address.sin_addr, global_args.port); //Not a best way to display port
+
+        if (bind(create_socket, (struct sockaddr *) &address, sizeof(address)) == 0){    
+                slog("Bound socket.\n");
+        } else {
+                perror("bind");
+                slog("ERROR: Can't bind socket to port %d\n", global_args.port);
+                exit(1);
+        }
+
+        while (1) {    
+                if (listen(create_socket, 10) < 0) {    
+                        perror("listen");    
+                        exit(1);    
+                }   
+                          
+                if ((new_socket = accept(create_socket, (struct sockaddr *) &address, &addrlen)) < 0) {    
+                        perror("accept");    
+                        exit(1);   
+                }    
+                        
+                if (new_socket > 0){    
+                        printf("The Client is connected...\n");
+                } 
+                                                     
+                recv(new_socket, buffer, bufsize, 0);    
+                write(new_socket, "HTTP/1.1 200 OK\n", 16);
+                write(new_socket, "Content-length: 46\n", 19);
+                write(new_socket, "Content-Type: text/html\n\n", 25);
+                write(new_socket, "<html><body><H1>Hello world</H1></body></html>",46);
+                printf("%s\n", buffer);    
+                close(new_socket);    
+        }    
+        close(create_socket);
         return 0;
 }
