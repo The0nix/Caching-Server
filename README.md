@@ -29,11 +29,13 @@
 # <a id="usage"></a> Installation and usage 
 
     $ git clone https://github.com/The0nix/Caching-Server.git
-    $ cd Caching-Server/bin
+    $ cd Caching-Server
+    $ mkdir bin; cd bin
+    $ cmake ../
     $ make
-    $ ./caser
+    $ ./caser -d
     
 ### Options:
- * `-d` — debug
+ * `-d` — debug info
  * `-p port` — specify port
  * `-h` — help
