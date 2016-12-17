@@ -11,8 +11,8 @@
 
 int main(int argc, char **argv) 
 {
+        read_conf();
         check_args(argc, argv);
-        //read_conf();
         slog("Program started.\n");
         int create_socket, new_socket;
         socklen_t addrlen;
@@ -23,12 +23,15 @@ int main(int argc, char **argv)
         create_socket = socket(AF_INET, SOCK_STREAM, 0); 
         if(create_socket > 0) {
                 slog("Created socket\n");
+        } else {
+                slog("ERROR: Can not create socket\n");
+                exit(1);
         }
         
         address.sin_family = AF_INET;
         address.sin_addr.s_addr = INADDR_ANY;
         address.sin_port = htons(global_args.port);
-        slog("Address: %d:%d\n", address.sin_addr, global_args.port); //Not a best way to display port
+        slog("Address: %d:%d\n", address.sin_addr, ntohs(address.sin_port));
 
         if (bind(create_socket, (struct sockaddr *) &address, sizeof(address)) == 0){    
                 slog("Bound socket.\n");
