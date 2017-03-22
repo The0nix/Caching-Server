@@ -1,8 +1,0 @@
-#include "parser.h"
-
-void CHECK(){}
-
-int http_parse_request(char *data, http_request_t *request) {
-    vlog("Parse check\n");
-    return 0;
-}
