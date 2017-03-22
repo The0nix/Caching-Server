@@ -10,7 +10,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "-std=c++14 -g")
 set(CMAKE_CXX_STANDARD 14)
 
 set(LIB_UTILS utils.cpp)
-set(LIB_PARSER parser.cpp)
+set(LIB_PARSER parser.c)
 set(LIB_CONTAINERS containers.cpp)
 add_library(utils ${LIB_UTILS})
 add_library(parser ${LIB_PARSER})
