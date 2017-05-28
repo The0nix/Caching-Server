@@ -12,11 +12,11 @@
 
 global_args_t global_args;
 
-static const char *opt_string = "dp:s:c:i:h?";
+static const char *opt_string = "dp:s:c:i:a:h?";
 
 void display_help()
 {
-        printf("server [-d][-h][-p port][-a site-address][-s site-path][-c config-path]\n");
+        printf("server [-d][-h][-p port][-a target-site-address][-s site-path][-c config-path]\n");
 }
 
 void slog(char* str, ...)
@@ -85,6 +85,7 @@ void check_args(int argc, char **argv) {
                                 break;
                         case('s'):
                                 global_args.site_path = strdup(optarg);
+                                break;
                         case('h'):
                         case('?'):
                                 display_help();

@@ -1,23 +1,26 @@
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
+#include <errno.h>
 #include <fcntl.h>
-#include <sys/types.h>
-#include <stdbool.h>
-#include <unistd.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <signal.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <signal.h>
-#include <sys/epoll.h>
 #include <string.h>
-#include <errno.h>
-#include "utils.h"
+#include <sys/epoll.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 #include "parser.h"
+#include "utils.h"
 
 #include <map>
-#include <string>
 #include <sstream>
+#include <string>
 
 volatile sig_atomic_t Stop = 0;
 
@@ -47,6 +50,8 @@ int main(int argc, char **argv)
         socklen_t addrlen;
         int bufsize = 1024*1024;
         char *buffer = (char*)malloc(bufsize); 
+        char proxy_site[1024];
+        char proxy_service[1024];
 
         int socket_fd = create_and_bind();
         make_non_blocking(socket_fd);
@@ -58,6 +63,16 @@ int main(int argc, char **argv)
         memset(&event, 0, sizeof(event));
         event.data.fd = socket_fd;
         event.events = EPOLLIN;
+
+        struct addrinfo *proxy_addrinfo;
+        if (global_args.proxy_mode) {
+            sscanf(global_args.site_address, "%1023[^:/]://%1023s", proxy_service, proxy_site);
+            struct addrinfo hints = {};
+            if (int errcode = getaddrinfo(proxy_site, proxy_service, &hints, &proxy_addrinfo)) {
+                printf("Error resolving host \"%s\" with service \"%s\": %s\n", 
+                        proxy_site, proxy_service, gai_strerror(errcode));
+            }
+        }
  
         if (listen(socket_fd, SOMAXCONN) < 0) {    
             perror("listen");    
@@ -152,20 +167,22 @@ int main(int argc, char **argv)
                     } else {
                         if (requests[fd].ready == 1) {
                             requests[fd].ready = 2;
-                            struct stat stats;
-                            if (stat(requests[fd].path, &stats) < 0) {
-                                perror("fstat");
-                                close(fdpairs[fd]);
-                                fdpairs.erase(fd);
-                                requests.erase(fd);
-                                requests_raw.erase(fd);
-                                close(fd);
-                                continue;
+                            if (!global_args.proxy_mode) {
+                                struct stat stats;
+                                if (stat(requests[fd].path, &stats) < 0) {
+                                    perror("fstat");
+                                    close(fdpairs[fd]);
+                                    fdpairs.erase(fd);
+                                    requests.erase(fd);
+                                    requests_raw.erase(fd);
+                                    close(fd);
+                                    continue;
+                                }
+                                char size[15];
+                                snprintf(size, 15, "%d", stats.st_size);
+                                std::vector<http_header_t> headers{{"Content-Type", "text/html"}, {"Content-Length", size}};
+                                write_headers(fd, 200, "OK", headers);
                             }
-                            char size[15];
-                            snprintf(size, 15, "%d", stats.st_size);
-                            std::vector<http_header_t> headers{{"Content-Type", "text/html"}, {"Content-Length", size}};
-                            write_headers(fd, 200, "OK", headers);
                         }
                         char buf[buffer_size];
                         int read_size = read(fdpairs[fd], buf, buffer_size);
@@ -202,7 +219,17 @@ int main(int argc, char **argv)
                                 close(fd);
                                 slog("%s\n", buffer);
                             }
-                            fdpairs[fd] = open(requests[fd].path, O_RDONLY);
+                            if (global_args.proxy_mode) {
+                                fdpairs[fd] = socket(PF_INET, SOCK_STREAM, 0);
+                                connect(fdpairs[fd], proxy_addrinfo->ai_addr, proxy_addrinfo->ai_addrlen);
+                                size_t hbegin = requests_raw[fd].find("Host");
+                                size_t hlen = requests_raw[fd].substr(hbegin).find("\n");
+                                requests_raw[fd].replace(hbegin + 6, hlen - 6, std::string(proxy_site)); //len("Host: ") == 6
+                                printf("<<%s>>\n", requests_raw[fd].c_str());
+                                write(fdpairs[fd], requests_raw[fd].c_str(), requests_raw[fd].length());
+                            } else {
+                                fdpairs[fd] = open(requests[fd].path, O_RDONLY);
+                            }
                             break;
                         }
                         if (recv_size < 0 ) {
