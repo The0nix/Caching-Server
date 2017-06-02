@@ -32,8 +32,11 @@
     $ mkdir bin; cd bin
     $ cmake ../
     $ make
-    $ ./caser -d -p 8080  # launch in default mode
-    $ ./caser -d -p 8080 -a http://pikabu.ru  # launch in proxy mode
+    $ ./caser -p 8080  # launch in default mode
+    $ ./caser -p 8080 -a http://pikabu.ru  # launch in proxy mode
+В папку bin необходимо поместить файлы сайта. Например: `echo ‘<html><body><h1>Hello, world</h1></body></html>’ > index.html` 
+Для доступа к серверу можно воспользоваться браузером, обратившись к нужному адресу (по умолчанию: `localhost:<port>/<path>`) или, например, утилитой *curl*: `curl localhost:<port>/<path>`
+Для отключения сервера используется комбинация клавиш `<Ctrl+C>`
     
 ### Options:
  * `-d` — debug info
