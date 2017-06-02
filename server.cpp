@@ -71,6 +71,7 @@ int main(int argc, char **argv)
             if (int errcode = getaddrinfo(proxy_site, proxy_service, &hints, &proxy_addrinfo)) {
                 printf("Error resolving host \"%s\" with service \"%s\": %s\n", 
                         proxy_site, proxy_service, gai_strerror(errcode));
+                exit(1);
             }
         }
  
