@@ -212,7 +212,9 @@ int main(int argc, char **argv)
                         if (recv_size == 0 || (recv_size < 0 && errno == EAGAIN)) {
                             if (http_parse_request(requests_raw[fd].c_str(), &requests[fd]) < 0) {
                                 slog("Bad request:\n");
-                                /*Response with 503*/
+                                std::vector<http_header_t> headers{{"Content-Type", "text/html"}, {"Content-Length", "51"}};
+                                write_headers(fd, 500, "Bad Request", headers);
+                                write(fd, "<html><body><h1>500: Bad Request</h1></body></html>", 49);
                                 close(fdpairs[fd]);
                                 fdpairs.erase(fd);
                                 requests.erase(fd);
