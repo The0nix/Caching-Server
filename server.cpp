@@ -219,6 +219,7 @@ int main(int argc, char **argv)
                                 requests_raw.erase(fd);
                                 close(fd);
                                 slog("%s\n", buffer);
+                                break;
                             }
                             if (global_args.proxy_mode) {
                                 fdpairs[fd] = socket(PF_INET, SOCK_STREAM, 0);
