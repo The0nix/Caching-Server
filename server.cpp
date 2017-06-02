@@ -69,7 +69,7 @@ int main(int argc, char **argv)
             sscanf(global_args.site_address, "%1023[^:/]://%1023s", proxy_service, proxy_site);
             struct addrinfo hints = {};
             if (int errcode = getaddrinfo(proxy_site, proxy_service, &hints, &proxy_addrinfo)) {
-                printf("Error resolving host \"%s\" with service \"%s\": %s\n", 
+                slog("Error resolving host \"%s\" with service \"%s\": %s\n", 
                         proxy_site, proxy_service, gai_strerror(errcode));
                 exit(1);
             }
@@ -153,7 +153,7 @@ int main(int argc, char **argv)
                             requests.insert({incoming_fd, r});
                             requests_raw.insert({incoming_fd, ""});
                             fdpairs.insert({incoming_fd, -1});
-                            printf("A client has connected...\n");
+                            slog("A client has connected...\n");
                         }
                     }
                 } else if (e_out && requests[fd].ready) {
@@ -227,7 +227,7 @@ int main(int argc, char **argv)
                                 size_t hbegin = requests_raw[fd].find("Host");
                                 size_t hlen = requests_raw[fd].substr(hbegin).find("\n");
                                 requests_raw[fd].replace(hbegin + 6, hlen - 6, std::string(proxy_site)); //len("Host: ") == 6
-                                printf("<<%s>>\n", requests_raw[fd].c_str());
+                                slog("<<%s>>\n", requests_raw[fd].c_str());
                                 write(fdpairs[fd], requests_raw[fd].c_str(), requests_raw[fd].length());
                             } else {
                                 fdpairs[fd] = open(requests[fd].path, O_RDONLY);
