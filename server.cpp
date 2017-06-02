@@ -32,7 +32,7 @@ void stop(int blank)
     Stop = 1;
 }
 
-int write_headers(int fd, int status, char* comment, std::vector<http_header_t> headers) {
+int write_headers(int fd, int status, const char* comment, std::vector<http_header_t> headers) {
     std::ostringstream sstr;
     sstr << "HTTP/1.1 " << status << " " << comment << "\r\n";
     for (size_t i = 0; i < headers.size(); ++i) {

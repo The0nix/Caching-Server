@@ -14,7 +14,7 @@ extern global_args_t global_args;
 
 void display_help();
 
-void slog(char* str, ...);
+void slog(const char* str, ...);
 
 void read_conf();
 

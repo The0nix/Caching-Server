@@ -33,8 +33,8 @@ typedef enum state {
 } state_t;
 
 typedef struct http_header {
-    char *name;
-    char *value;
+    const char *name;
+    const char *value;
 } http_header_t;
 
 typedef struct http_request {

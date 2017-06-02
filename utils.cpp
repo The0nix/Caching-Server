@@ -16,10 +16,10 @@ static const char *opt_string = "dp:s:c:i:a:h?";
 
 void display_help()
 {
-        printf("server [-d][-h][-p port][-a target-site-address][-s site-path][-c config-path]\n");
+        printf("server [-d][-h][-p port][-a target-site-address]\n");
 }
 
-void slog(char* str, ...)
+void slog(const char* str, ...)
 {
         if(global_args.debug_mode) {
             va_list args;
