@@ -230,7 +230,17 @@ int main(int argc, char **argv)
                                 slog("<<%s>>\n", requests_raw[fd].c_str());
                                 write(fdpairs[fd], requests_raw[fd].c_str(), requests_raw[fd].length());
                             } else {
+                                slog("<<%s>>\n", requests_raw[fd].c_str());
                                 fdpairs[fd] = open(requests[fd].path, O_RDONLY);
+                                if (open >= 0) {
+                                    printf("\ncheck!\n\n");
+                                    struct stat buf;
+                                    fstat(fdpairs[fd], &buf);
+                                    if (S_ISDIR(buf.st_mode)) {
+                                        printf("\ncheck2!\n\n");
+                                        fdpairs[fd] = -1;
+                                    }
+                                }
                             }
                             break;
                         }
